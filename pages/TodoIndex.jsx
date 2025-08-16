@@ -4,6 +4,8 @@ import { DataTable } from "../cmps/data-table/DataTable.jsx"
 import { todoService } from "../services/todo.service.js"
 import { showErrorMsg, showSuccessMsg } from "../services/event-bus.service.js"
 
+import { removeTodo } from "../store/actions/todo.actions.js"
+
 const { useState, useEffect } = React
 const { Link, useSearchParams } = ReactRouterDOM
 
@@ -29,15 +31,10 @@ export function TodoIndex() {
     }, [filterBy])
 
     function onRemoveTodo(todoId) {
-        todoService.remove(todoId)
-            .then(() => {
-                setTodos(prevTodos => prevTodos.filter(todo => todo._id !== todoId))
-                showSuccessMsg(`Todo removed`)
-            })
-            .catch(err => {
-                console.log('err:', err)
-                showErrorMsg('Cannot remove todo ' + todoId)
-            })
+        if (!confirm('Are you sure?')) return
+        removeTodo(todoId)
+            .then(() => showSuccessMsg('Todo removed'))
+            .catch(err => showErrorMsg('Cannot remove todo'))
     }
 
     function onToggleTodo(todo) {
@@ -45,7 +42,7 @@ export function TodoIndex() {
         todoService.save(todoToSave)
             .then((savedTodo) => {
                 setTodos(prevTodos => prevTodos.map(currTodo => (currTodo._id !== todo._id) ? currTodo : { ...savedTodo }))
-                showSuccessMsg(`Todo is ${(savedTodo.isDone)? 'done' : 'back on your list'}`)
+                showSuccessMsg(`Todo is ${(savedTodo.isDone) ? 'done' : 'back on your list'}`)
             })
             .catch(err => {
                 console.log('err:', err)
