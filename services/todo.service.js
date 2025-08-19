@@ -25,7 +25,7 @@ window.cs = todoService
 // ================= QUERY =================
 function query(filterBy = {}) {
     return storageService.query(TODO_KEY).then((todos) => {
-        
+
 
         if (filterBy.txt) {
             const regExp = new RegExp(filterBy.txt, 'i')
@@ -36,11 +36,11 @@ function query(filterBy = {}) {
             todos = todos.filter(todo => todo.importance >= filterBy.importance)
         }
 
-        // if (filterBy.isDone !== 'all') {
-        //     todos = todos.filter(todo =>
-        //         filterBy.isDone === 'done' ? todo.isDone : !todo.isDone
-        //     )
-        // }
+        if (filterBy.isDone !== 'all') {
+            todos = todos.filter(todo =>
+                filterBy.isDone === 'done' ? todo.isDone : !todo.isDone
+            )
+        }
 
         // if (filterBy.sort) {
         //     if (filterBy.sort === 'txt') todos.sort((a, b) => a.txt.localeCompare(b.txt))
@@ -104,15 +104,15 @@ function getDefaultFilter() {
 
 function getFilterFromSearchParams() {
     console.log('filter from service');
-    
+
     const href = window.location.href  //http://127.0.0.1:5503/#/todo?isDone=all 
     const idx = href.indexOf('?')
     const queryString = idx !== -1 ? href.slice(idx + 1) : ''
     const queryParams = new URLSearchParams(queryString)
     return {
         txt: queryParams.get('txt') || '',
-        // isDone: queryParams.get('isDone') || 'all',
         importance: +queryParams.get('importance') || 0,
+        isDone: queryParams.get('isDone') || 'all',
         // pageIdx: +queryParams.get('pageIdx') || 0,
         // sort: queryParams.get('sort') || '',
     }

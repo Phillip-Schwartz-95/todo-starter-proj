@@ -8,8 +8,8 @@ export function TodoPreview({ todo, onToggleTodo, onRemove }) {
       </div>
       <section>
         <button onClick={onRemove}>Remove</button>
-        <button><Link to={`/todo/${todo._id}`}>Details</Link></button>
-        <button><Link to={`/todo/edit/${todo._id}`}>Edit</Link></button>
+        <Link to={`/todo/${todo._id}`} className="btn">Details</Link>
+        <Link to={`/todo/edit/${todo._id}`} className="btn">Edit</Link>
       </section>
     </li>
   )

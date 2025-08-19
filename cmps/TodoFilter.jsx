@@ -29,24 +29,41 @@ export function TodoFilter({ filterBy, onSetFilterBy }) {
         setFilterByToEdit(prevFilter => ({ ...prevFilter, [field]: value }))
     }
 
-    // Optional support for LAZY Filtering with a button
+    // Optional support
     function onSubmitFilter(ev) {
         ev.preventDefault()
         onSetFilterBy(filterByToEdit)
     }
 
-    const { txt, importance } = filterByToEdit
+   const { txt, importance, isDone } = filterByToEdit
+
     return (
         <section className="todo-filter">
             <h2>Filter Todos</h2>
             <form onSubmit={onSubmitFilter}>
-                <input value={txt} onChange={handleChange}
-                    type="search" placeholder="By Txt" id="txt" name="txt"
+                <input
+                    value={txt}
+                    onChange={handleChange}
+                    type="search"
+                    placeholder="By Text"
+                    name="txt"
+                    id="txt"
                 />
                 <label htmlFor="importance">Importance: </label>
-                <input value={importance} onChange={handleChange}
-                    type="number" placeholder="By Importance" id="importance" name="importance"
+                <input
+                    value={importance}
+                    onChange={handleChange}
+                    type="number"
+                    placeholder="By Importance"
+                    name="importance"
+                    id="importance"
                 />
+                <label htmlFor="isDone">Status: </label>
+                <select name="isDone" value={isDone} onChange={handleChange}>
+                    <option value="all">All</option>
+                    <option value="active">Active</option>
+                    <option value="done">Done</option>
+                </select>
 
                 <button hidden>Set Filter</button>
             </form>
