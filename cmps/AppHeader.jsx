@@ -9,8 +9,16 @@ import { showErrorMsg } from '../services/event-bus.service.js'
 
 export function AppHeader() {
     const navigate = useNavigate()
-    const [user, setUser] = useState(userService.getLoggedinUser()) // reactive state
+    const [user, setUser] = useState(userService.getLoggedinUser())
     const doneTodosPercent = useSelector(state => state.doneTodosPercent || 0)
+
+    useEffect(() => {
+        // Polling to keep balance and activities reactive
+        const interval = setInterval(() => {
+            setUser(userService.getLoggedinUser())
+        }, 500)
+        return () => clearInterval(interval)
+    }, [])
 
     function onLogout() {
         userService.logout()
@@ -55,3 +63,4 @@ export function AppHeader() {
         </header>
     )
 }
+
