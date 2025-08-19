@@ -1,6 +1,5 @@
 import { storageService } from "./async-storage.service.js"
 
-
 export const userService = {
     getLoggedinUser,
     login,
@@ -10,8 +9,29 @@ export const userService = {
     query,
     getEmptyCredentials
 }
+
 const STORAGE_KEY_LOGGEDIN = 'user'
 const STORAGE_KEY = 'userDB'
+
+// Seed a default user if none exist
+_createDefaultUsers()
+
+function _createDefaultUsers() {
+    let users = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []
+    if (!users.length) {
+        users = [
+            {
+                _id: 'u101',
+                username: 'muki',
+                password: 'muki1',
+                fullname: 'Muki Ja',
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            }
+        ]
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(users))
+    }
+}
 
 function query() {
     return storageService.query(STORAGE_KEY)
@@ -24,7 +44,7 @@ function getById(userId) {
 function login({ username, password }) {
     return storageService.query(STORAGE_KEY)
         .then(users => {
-            const user = users.find(user => user.username === username)
+            const user = users.find(user => user.username === username && user.password === password)
             if (user) return _setLoggedinUser(user)
             else return Promise.reject('Invalid login')
         })
