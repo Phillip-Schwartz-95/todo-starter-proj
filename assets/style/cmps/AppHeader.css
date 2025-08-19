@@ -26,6 +26,31 @@ a.active {
     text-decoration: underline;
 }
 
+.progress-bar {
+  position: relative;
+  width: 100%;
+  background-color: #eee; /* light gray background */
+  border-radius: 8px;
+  height: 20px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-filled {
+  background-color: #4caf50; /* green fill */
+  height: 100%;
+  width: 0; /* dynamic width from style prop */
+  transition: width 0.3s ease;
+}
+
+.progress-bar small {
+  position: absolute;
+  right: 8px;
+  top: 1px;
+  font-size: 12px;
+  color: #000; /* black text */
+  font-weight: bold;
+}
 
 @media (max-width: 720px) {
     .app-header {

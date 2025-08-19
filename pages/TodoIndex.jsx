@@ -7,6 +7,7 @@ import { TodoFilter } from '../cmps/TodoFilter.jsx'
 import { TodoList } from '../cmps/TodoList.jsx'
 import { DataTable } from '../cmps/data-table/DataTable.jsx'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service.js'
+import { userService } from '../services/user.service.js'
 
 export function TodoIndex() {
   const todos = useSelector(state => state.todos)
@@ -16,12 +17,10 @@ export function TodoIndex() {
 
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Load todos once on mount and whenever filter changes
   useEffect(() => {
     async function fetchTodos() {
       try {
         await loadTodos(filterBy)
-        // Update URL search params to reflect current filter
         const params = new URLSearchParams(filterBy).toString()
         setSearchParams(params)
       } catch (err) {
@@ -32,16 +31,15 @@ export function TodoIndex() {
   }, [filterBy])
 
   function handleSetFilterBy(newFilter) {
-    // Update filter in store, then reload todos
     setFilterSort(newFilter)
-    loadTodos(newFilter).catch(() => showErrorMsg('Cannot load todos'))
+    loadTodos(newFilter).catch(err => showErrorMsg('Cannot load todos'))
   }
 
   function onRemoveTodo(todoId) {
     if (!confirm('Are you sure?')) return
     removeTodo(todoId)
       .then(() => showSuccessMsg('Todo removed'))
-      .catch(() => showErrorMsg('Cannot remove todo'))
+      .catch(err => showErrorMsg('Cannot remove todo'))
   }
 
   function onToggleTodo(todo) {
@@ -52,15 +50,12 @@ export function TodoIndex() {
         if (updatedTodo.isDone) {
           userService.addActivity(`Completed Todo: ${updatedTodo.txt}`)
           userService.updateBalance(10).then(newBalance => {
-            setUser(prev => ({ ...prev, balance: newBalance }))
+            // optional: update user balance in store
           })
         }
       })
-      .catch(() => showErrorMsg('Cannot toggle todo'))
+      .catch(err => showErrorMsg('Cannot toggle todo'))
   }
-
-
-  if (!todos || todos.length === 0) return <div>No todos to show...</div>
 
   return (
     <section className="todo-index">
@@ -76,13 +71,20 @@ export function TodoIndex() {
       </div>
 
       <h3>Todos List</h3>
-      <TodoList todos={todos} onRemoveTodo={onRemoveTodo} onToggleTodo={onToggleTodo} />
+      {todos && todos.length > 0 ? (
+        <TodoList todos={todos} onRemoveTodo={onRemoveTodo} onToggleTodo={onToggleTodo} />
+      ) : (
+        <p>No todos to show...</p>
+      )}
 
       <hr />
       <h3>Todos Table</h3>
-      <div style={{ width: '60%', margin: 'auto' }}>
-        <DataTable todos={todos} onRemoveTodo={onRemoveTodo} />
-      </div>
+      {todos && todos.length > 0 && (
+        <div style={{ width: '60%', margin: 'auto' }}>
+          <DataTable todos={todos} onRemoveTodo={onRemoveTodo} />
+        </div>
+      )}
     </section>
   )
 }
+

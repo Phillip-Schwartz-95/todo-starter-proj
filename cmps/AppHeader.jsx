@@ -13,7 +13,6 @@ export function AppHeader() {
     const doneTodosPercent = useSelector(state => state.doneTodosPercent || 0)
 
     useEffect(() => {
-        // Polling to keep balance and activities reactive
         const interval = setInterval(() => {
             setUser(userService.getLoggedinUser())
         }, 500)
@@ -63,4 +62,6 @@ export function AppHeader() {
         </header>
     )
 }
+
+
 
