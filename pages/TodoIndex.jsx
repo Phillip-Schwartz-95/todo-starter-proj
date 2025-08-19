@@ -1,67 +1,92 @@
-const { useSelector, useDispatch } = ReactRedux
-
-import { loadTodos } from "../store/actions/todo.actions.js"
-
-import { TodoFilter } from "../cmps/TodoFilter.jsx"
-import { TodoList } from "../cmps/TodoList.jsx"
-import { DataTable } from "../cmps/data-table/DataTable.jsx"
-import { todoService } from "../services/todo.service.js"
-import { showErrorMsg, showSuccessMsg } from "../services/event-bus.service.js"
-
-import { removeTodo } from "../store/actions/todo.actions.js"
-
-const { useState, useEffect } = React
+const { useSelector } = ReactRedux
+const { useEffect, useRef } = React
 const { Link, useSearchParams } = ReactRouterDOM
 
-export function TodoIndex() {
-  const dispatch = useDispatch()
-  const todos = useSelector(state => state.todos)
+import { loadTodos, removeTodo, saveTodo, setFilter } from '../store/actions/todo.actions.js'
+import { TodoFilter } from '../cmps/TodoFilter.jsx'
+import { TodoList } from '../cmps/TodoList.jsx'
+import { DataTable } from '../cmps/data-table/DataTable.jsx'
+import { todoService } from '../services/todo.service.js'
+import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service.js'
 
-  const [searchParams, setSearchParams] = useSearchParams()
-  const defaultFilter = todoService.getFilterFromSearchParams(searchParams)
-  const [filterBy, setFilterBy] = useState(defaultFilter)
-
+// 🔸 Keep debounce in this file
+function useDebounce(value, delay = 500) {
+  const [debouncedValue, setDebouncedValue] = React.useState(value)
   useEffect(() => {
-    setSearchParams(filterBy)
-    loadTodos(filterBy)
-    .catch(() => showErrorMsg('Cannot load todos'))
-}, [filterBy]) 
+    const id = setTimeout(() => setDebouncedValue(value), delay)
+    return () => clearTimeout(id)
+  }, [value, delay])
+  return debouncedValue
+}
+
+export function TodoIndex() {
+  const todos = useSelector(state => state.todos)
+  const filterBy = useSelector(state => state.filterBy)
+  const isLoading = useSelector(state => state.isLoading)
+  const user = useSelector(state => state.user)
+
+  const [searchParams] = useSearchParams()
+
+  // Update store.filterBy when searchParams change
+  useEffect(() => {
+    const nextFilter = todoService.getFilterFromSearchParams(searchParams)
+    if (JSON.stringify(nextFilter) !== JSON.stringify(filterBy)) {
+      setFilter(nextFilter)
+    }
+  }, [searchParams])
+
+  // Debounced filter to avoid excessive API calls
+  const debouncedFilterBy = useDebounce(filterBy, 600)
+
+  // Load todos whenever the debounced filter changes
+  const prevKeyRef = useRef('')
+  useEffect(() => {
+    if (!debouncedFilterBy) return
+    const key = JSON.stringify(debouncedFilterBy)
+    if (key === prevKeyRef.current) return
+    prevKeyRef.current = key
+
+    loadTodos(debouncedFilterBy).catch(() => showErrorMsg('Cannot load todos'))
+  }, [debouncedFilterBy])
 
   function onRemoveTodo(todoId) {
     if (!confirm('Are you sure?')) return
     removeTodo(todoId)
       .then(() => showSuccessMsg('Todo removed'))
-      .catch(err => showErrorMsg('Cannot remove todo'))
+      .catch(() => showErrorMsg('Cannot remove todo'))
   }
 
   function onToggleTodo(todo) {
-    const todoToSave = { ...todo, isDone: !todo.isDone }
-    todoService.save(todoToSave)
-      .then((savedTodo) => {
-        // If you're using Redux, dispatch an update instead of setTodos
-        showSuccessMsg(`Todo is ${(savedTodo.isDone) ? 'done' : 'back on your list'}`)
-      })
-      .catch(err => {
-        console.log('err:', err)
-        showErrorMsg('Cannot toggle todo ' + todo._id)
-      })
+    const updatedTodo = { ...todo, isDone: !todo.isDone }
+    saveTodo(updatedTodo)
+      .then(() => showSuccessMsg(`Todo is ${updatedTodo.isDone ? 'done' : 'back on your list'}`))
+      .catch(() => showErrorMsg('Cannot toggle todo'))
   }
 
-  if (!todos) return <div>Loading...</div>
+  if (!todos) return <div>No todos to show...</div>
 
   return (
     <section className="todo-index">
-      <TodoFilter filterBy={filterBy} onSetFilterBy={setFilterBy} />
+      <div className="header-row">
+        <h2>Todos {user && `for ${user.name}`}</h2>
+        {isLoading && <small style={{ marginLeft: 8 }}>Loading…</small>}
+      </div>
+
+      <TodoFilter filterBy={filterBy} onSetFilterBy={setFilter} />
+
       <div>
         <Link to="/todo/edit" className="btn">Add Todo</Link>
       </div>
-      <h2>Todos List</h2>
+
+      <h3>Todos List</h3>
       <TodoList todos={todos} onRemoveTodo={onRemoveTodo} onToggleTodo={onToggleTodo} />
+
       <hr />
-      <h2>Todos Table</h2>
+      <h3>Todos Table</h3>
       <div style={{ width: '60%', margin: 'auto' }}>
         <DataTable todos={todos} onRemoveTodo={onRemoveTodo} />
       </div>
     </section>
   )
 }
+
