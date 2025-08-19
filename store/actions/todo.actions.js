@@ -1,3 +1,6 @@
+import { todoService } from '../../services/todo.service.js'
+import { utilService } from '../../services/util.service.js'
+
 import { store } from '../store.js'
 import {
   REMOVE_TODO,
@@ -9,19 +12,21 @@ import {
   SET_DONE_TODOS_PERCENT,
   SET_MAX_PAGE,
 } from '../store.js'
-import { todoService } from '../../services/todo.service.js'
 
 // Load todos using the current filter in the store if filterSort is not provided
-export function loadTodos(filterSort) {
+export function loadTodos() {
   store.dispatch({ type: SET_IS_LOADING, isLoading: true })
 
-  const filter = filterSort || store.getState().filterBy
+  const filter = store.getState().filterBy
+  console.log('filter from action:', filter);
+  
 
   return todoService
     .query(filter)
-    .then(({ todos, maxPage, doneTodosPercent }) => {
+    .then((todos) => {
+    // .then(({ todos, maxPage, doneTodosPercent }) => {
       store.dispatch({ type: SET_TODOS, todos })
-      _setTodosData(doneTodosPercent, maxPage)
+    //   _setTodosData(doneTodosPercent, maxPage)
       return todos
     })
     .catch((err) => {
@@ -34,6 +39,10 @@ export function loadTodos(filterSort) {
 }
 
 export function removeTodo(todoId) {
+  if (!window.confirm('Are you sure you want to delete this todo?')) {
+    return Promise.resolve() // exit early if user cancels
+  }
+
   return todoService
     .remove(todoId)
     .then(({ maxPage, doneTodosPercent }) => {
@@ -47,23 +56,22 @@ export function removeTodo(todoId) {
     })
 }
 
+
 export function saveTodo(todo) {
   const type = todo._id ? UPDATE_TODO : ADD_TODO
+
+  if (!todo.color) todo.color = utilService.getRandomColor()
 
   return todoService
     .save(todo)
     .then(({ savedTodo, maxPage, doneTodosPercent }) => {
-      store.dispatch({ type, todo: savedTodo })
+      store.dispatch({ type, todo: savedTodo }) // color is included here
       _setTodosData(doneTodosPercent, maxPage)
       return savedTodo
     })
     .then((res) => {
       const actionName = todo._id ? 'Updated' : 'Added'
       return addActivity(`${actionName} a Todo: ${todo.txt}`).then(() => res)
-    })
-    .catch((err) => {
-      console.error('Cannot save todo:', err)
-      throw err
     })
 }
 

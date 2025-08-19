@@ -1,3 +1,6 @@
+import { todoService } from "../services/todo.service.js"
+
+
 const { createStore, compose } = Redux
 
 export const SET_TODOS = 'SET_TODOS'
@@ -12,8 +15,8 @@ export const SET_MAX_PAGE = 'SET_MAX_PAGE'
 
 const initialState = {
     todos: [],
-    color: '',
-    filterBy: { txt: '', status: 'all', importance: 0 },
+    // filterBy: {txt: 0 , isDone: false},
+    filterBy: todoService.getFilterFromSearchParams(),
     isLoading: false,
     user: null
 }
@@ -22,15 +25,22 @@ export function appReducer(state = initialState, action = {}) {
     switch (action.type) {
         case SET_TODOS:
             return { ...state, todos: action.todos }
-
         case ADD_TODO:
-            return { ...state, todos: [...state.todos, action.todo] }
+            return {
+                ...state,
+                todos: [...state.todos, action.todo]
+            }
 
         case REMOVE_TODO:
             return { ...state, todos: state.todos.filter(t => t._id !== action.todoId) }
 
         case UPDATE_TODO:
-            return { ...state, todos: state.todos.map(t => t._id === action.todo._id ? action.todo : t) }
+            return {
+                ...state,
+                todos: state.todos.map(todo =>
+                    todo._id === action.todo._id ? action.todo : todo
+                )
+            }
 
         case SET_FILTER:
             return { ...state, filterBy: action.filterBy }

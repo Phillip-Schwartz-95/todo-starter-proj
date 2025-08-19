@@ -10,14 +10,14 @@ import { todoService } from '../services/todo.service.js'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service.js'
 
 // 🔸 Keep debounce in this file
-function useDebounce(value, delay = 500) {
-  const [debouncedValue, setDebouncedValue] = React.useState(value)
-  useEffect(() => {
-    const id = setTimeout(() => setDebouncedValue(value), delay)
-    return () => clearTimeout(id)
-  }, [value, delay])
-  return debouncedValue
-}
+// function useDebounce(value, delay = 500) {
+//   const [debouncedValue, setDebouncedValue] = React.useState(value)
+//   useEffect(() => {
+//     const id = setTimeout(() => setDebouncedValue(value), delay)
+//     return () => clearTimeout(id)
+//   }, [value, delay])
+//   return debouncedValue
+// }
 
 export function TodoIndex() {
   const todos = useSelector(state => state.todos)
@@ -25,29 +25,32 @@ export function TodoIndex() {
   const isLoading = useSelector(state => state.isLoading)
   const user = useSelector(state => state.user)
 
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const prevKeyRef = useRef('')
+
 
   // Update store.filterBy when searchParams change
-  useEffect(() => {
-    const nextFilter = todoService.getFilterFromSearchParams(searchParams)
-    if (JSON.stringify(nextFilter) !== JSON.stringify(filterBy)) {
-      setFilter(nextFilter)
-    }
-  }, [searchParams])
+  // useEffect(() => {
+  //   const nextFilter = todoService.getFilterFromSearchParams(searchParams)
+  //   if (JSON.stringify(nextFilter) !== JSON.stringify(filterBy)) {
+  //     setFilter(nextFilter)
+  //   }
+  // }, [searchParams])
 
   // Debounced filter to avoid excessive API calls
-  const debouncedFilterBy = useDebounce(filterBy, 600)
+  // const debouncedFilterBy = useDebounce(filterBy, 600)
 
   // Load todos whenever the debounced filter changes
-  const prevKeyRef = useRef('')
   useEffect(() => {
-    if (!debouncedFilterBy) return
-    const key = JSON.stringify(debouncedFilterBy)
-    if (key === prevKeyRef.current) return
-    prevKeyRef.current = key
+    // if (!debouncedFilterBy) return
+    // const key = JSON.stringify(debouncedFilterBy)
+    // if (key === prevKeyRef.current) return
+    // prevKeyRef.current = key
 
-    loadTodos(debouncedFilterBy).catch(() => showErrorMsg('Cannot load todos'))
-  }, [debouncedFilterBy])
+    // loadTodos(debouncedFilterBy).catch(() => showErrorMsg('Cannot load todos'))
+    loadTodos()
+    setSearchParams(filterBy)
+  }, [filterBy])
 
   function onRemoveTodo(todoId) {
     if (!confirm('Are you sure?')) return
