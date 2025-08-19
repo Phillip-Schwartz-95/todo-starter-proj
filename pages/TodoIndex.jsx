@@ -47,9 +47,18 @@ export function TodoIndex() {
   function onToggleTodo(todo) {
     const updatedTodo = { ...todo, isDone: !todo.isDone }
     saveTodo(updatedTodo)
-      .then(() => showSuccessMsg(`Todo is ${updatedTodo.isDone ? 'done' : 'back on your list'}`))
+      .then(() => {
+        showSuccessMsg(`Todo is ${updatedTodo.isDone ? 'done' : 'back on your list'}`)
+        if (updatedTodo.isDone) {
+          userService.addActivity(`Completed Todo: ${updatedTodo.txt}`)
+          userService.updateBalance(10).then(newBalance => {
+            setUser(prev => ({ ...prev, balance: newBalance }))
+          })
+        }
+      })
       .catch(() => showErrorMsg('Cannot toggle todo'))
   }
+
 
   if (!todos || todos.length === 0) return <div>No todos to show...</div>
 

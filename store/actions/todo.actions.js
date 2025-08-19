@@ -15,23 +15,27 @@ import {
 
 // Load todos using the provided filterSort or current store filter
 export function loadTodos(filterSort) {
-    store.dispatch({ type: SET_IS_LOADING, isLoading: true })
-    const filter = filterSort || store.getState().filterBy
+  store.dispatch({ type: SET_IS_LOADING, isLoading: true })
+  const filter = filterSort || store.getState().filterBy
 
-    return todoService
-      .query(filter)
-      .then(todos => {
-          store.dispatch({ type: SET_TODOS, todos })
-          return todos
-      })
-      .catch((err) => {
-          console.error('Cannot load todos:', err)
-          throw err
-      })
-      .finally(() => {
-          store.dispatch({ type: SET_IS_LOADING, isLoading: false })
-      })
+  return todoService
+    .query(filter)
+    .then((todos) => {
+      store.dispatch({ type: SET_TODOS, todos })
+      // Calculate doneTodosPercent immediately
+      const doneTodosPercent = todoService.getDoneTodosPercentSync(todos)
+      store.dispatch({ type: SET_DONE_TODOS_PERCENT, doneTodosPercent })
+      return todos
+    })
+    .catch((err) => {
+      console.error('Cannot load todos:', err)
+      throw err
+    })
+    .finally(() => {
+      store.dispatch({ type: SET_IS_LOADING, isLoading: false })
+    })
 }
+
 
 export function saveTodo(todo) {
   const type = todo._id ? UPDATE_TODO : ADD_TODO

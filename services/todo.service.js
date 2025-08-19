@@ -17,6 +17,7 @@ export const todoService = {
     getFilterFromSearchParams,
     getImportanceStats,
     getDoneTodosPercent,
+    getDoneTodosPercentSync,
 }
 
 // For debug:
@@ -132,6 +133,13 @@ function getDoneTodosPercent() {
         const doneCount = todos.reduce((acc, t) => acc + t.isDone, 0)
         return (doneCount / todos.length) * 100 || 0
     })
+}
+
+//done todos onload
+function getDoneTodosPercentSync(todos) {
+  if (!todos || !todos.length) return 0
+  const doneCount = todos.filter(t => t.isDone).length
+  return Math.round((doneCount / todos.length) * 100)
 }
 
 // Get max page count
