@@ -5,7 +5,7 @@ export function TodoFilter({ filterBy, onSetFilterBy }) {
     const [filterByToEdit, setFilterByToEdit] = useState({...filterBy})
 
     useEffect(() => {
-        // Notify parent
+        // to parent
         onSetFilterBy(filterByToEdit)
     }, [filterByToEdit])
 
@@ -29,7 +29,7 @@ export function TodoFilter({ filterBy, onSetFilterBy }) {
         setFilterByToEdit(prevFilter => ({ ...prevFilter, [field]: value }))
     }
 
-    // Optional support
+
     function onSubmitFilter(ev) {
         ev.preventDefault()
         onSetFilterBy(filterByToEdit)

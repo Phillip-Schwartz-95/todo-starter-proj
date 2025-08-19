@@ -37,9 +37,9 @@ a.active {
 }
 
 .progress-filled {
-  background-color: #4caf50; /* green fill */
+  background-color: #4caf50; 
   height: 100%;
-  width: 0; /* dynamic width from style prop */
+  width: 0; 
   transition: width 0.3s ease;
 }
 
@@ -48,7 +48,7 @@ a.active {
   right: 8px;
   top: 1px;
   font-size: 12px;
-  color: #000; /* black text */
+  color: #000; 
   font-weight: bold;
 }
 
