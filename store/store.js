@@ -1,4 +1,5 @@
 import { todoService } from "../services/todo.service.js"
+import { userService } from "../services/user.service.js"
 
 
 const { createStore, compose } = Redux
@@ -18,7 +19,7 @@ const initialState = {
     // filterBy: {txt: 0 , isDone: false},
     filterBy: todoService.getFilterFromSearchParams(),
     isLoading: false,
-    user: null
+    user: userService.getLoggedinUser()
 }
 
 export function appReducer(state = initialState, action = {}) {
@@ -61,5 +62,6 @@ export function appReducer(state = initialState, action = {}) {
             return state
     }
 }
+
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
 export const store = createStore(appReducer, composeEnhancers())

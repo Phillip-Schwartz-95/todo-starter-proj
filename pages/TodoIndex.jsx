@@ -1,23 +1,12 @@
 const { useSelector } = ReactRedux
-const { useEffect, useRef } = React
+const { useEffect } = React
 const { Link, useSearchParams } = ReactRouterDOM
 
-import { loadTodos, removeTodo, saveTodo, setFilter } from '../store/actions/todo.actions.js'
+import { loadTodos, removeTodo, saveTodo, setFilterSort } from '../store/actions/todo.actions.js'
 import { TodoFilter } from '../cmps/TodoFilter.jsx'
 import { TodoList } from '../cmps/TodoList.jsx'
 import { DataTable } from '../cmps/data-table/DataTable.jsx'
-import { todoService } from '../services/todo.service.js'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service.js'
-
-// 🔸 Keep debounce in this file
-// function useDebounce(value, delay = 500) {
-//   const [debouncedValue, setDebouncedValue] = React.useState(value)
-//   useEffect(() => {
-//     const id = setTimeout(() => setDebouncedValue(value), delay)
-//     return () => clearTimeout(id)
-//   }, [value, delay])
-//   return debouncedValue
-// }
 
 export function TodoIndex() {
   const todos = useSelector(state => state.todos)
@@ -26,31 +15,27 @@ export function TodoIndex() {
   const user = useSelector(state => state.user)
 
   const [searchParams, setSearchParams] = useSearchParams()
-  const prevKeyRef = useRef('')
 
-
-  // Update store.filterBy when searchParams change
-  // useEffect(() => {
-  //   const nextFilter = todoService.getFilterFromSearchParams(searchParams)
-  //   if (JSON.stringify(nextFilter) !== JSON.stringify(filterBy)) {
-  //     setFilter(nextFilter)
-  //   }
-  // }, [searchParams])
-
-  // Debounced filter to avoid excessive API calls
-  // const debouncedFilterBy = useDebounce(filterBy, 600)
-
-  // Load todos whenever the debounced filter changes
+  // Load todos once on mount and whenever filter changes
   useEffect(() => {
-    // if (!debouncedFilterBy) return
-    // const key = JSON.stringify(debouncedFilterBy)
-    // if (key === prevKeyRef.current) return
-    // prevKeyRef.current = key
-
-    // loadTodos(debouncedFilterBy).catch(() => showErrorMsg('Cannot load todos'))
-    loadTodos()
-    setSearchParams(filterBy)
+    async function fetchTodos() {
+      try {
+        await loadTodos(filterBy)
+        // Update URL search params to reflect current filter
+        const params = new URLSearchParams(filterBy).toString()
+        setSearchParams(params)
+      } catch (err) {
+        showErrorMsg('Cannot load todos')
+      }
+    }
+    fetchTodos()
   }, [filterBy])
+
+  function handleSetFilterBy(newFilter) {
+    // Update filter in store, then reload todos
+    setFilterSort(newFilter)
+    loadTodos(newFilter).catch(() => showErrorMsg('Cannot load todos'))
+  }
 
   function onRemoveTodo(todoId) {
     if (!confirm('Are you sure?')) return
@@ -66,7 +51,7 @@ export function TodoIndex() {
       .catch(() => showErrorMsg('Cannot toggle todo'))
   }
 
-  if (!todos) return <div>No todos to show...</div>
+  if (!todos || todos.length === 0) return <div>No todos to show...</div>
 
   return (
     <section className="todo-index">
@@ -75,7 +60,7 @@ export function TodoIndex() {
         {isLoading && <small style={{ marginLeft: 8 }}>Loading…</small>}
       </div>
 
-      <TodoFilter filterBy={filterBy} onSetFilterBy={setFilter} />
+      <TodoFilter filterBy={filterBy} onSetFilterBy={handleSetFilterBy} />
 
       <div>
         <Link to="/todo/edit" className="btn">Add Todo</Link>
@@ -92,4 +77,3 @@ export function TodoIndex() {
     </section>
   )
 }
-

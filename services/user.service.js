@@ -7,7 +7,10 @@ export const userService = {
     signup,
     getById,
     query,
-    getEmptyCredentials
+    getEmptyCredentials,
+    updateUserPreffs,
+    addActivity,
+    updateBalance
 }
 
 const STORAGE_KEY_LOGGEDIN = 'user'
@@ -25,6 +28,9 @@ function _createDefaultUsers() {
                 username: 'muki',
                 password: 'muki1',
                 fullname: 'Muki Ja',
+                balance: 100,         // Add balance for example
+                activities: [],       // Add activities array
+                pref: { color: '#ffffff', bgColor: '#191919' },
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
             }
@@ -44,15 +50,23 @@ function getById(userId) {
 function login({ username, password }) {
     return storageService.query(STORAGE_KEY)
         .then(users => {
-            const user = users.find(user => user.username === username && user.password === password)
+            const user = users.find(u => u.username === username && u.password === password)
             if (user) return _setLoggedinUser(user)
             else return Promise.reject('Invalid login')
         })
 }
 
 function signup({ username, password, fullname }) {
-    const user = { username, password, fullname }
-    user.createdAt = user.updatedAt = Date.now()
+    const user = {
+        username,
+        password,
+        fullname,
+        balance: 100,
+        activities: [],
+        pref: { color: '#ffffff', bgColor: '#191919' },
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+    }
 
     return storageService.post(STORAGE_KEY, user)
         .then(_setLoggedinUser)
@@ -67,8 +81,50 @@ function getLoggedinUser() {
     return JSON.parse(sessionStorage.getItem(STORAGE_KEY_LOGGEDIN))
 }
 
+function updateUserPreffs(userToUpdate) {
+    const loggedInUser = getLoggedinUser()
+    if (!loggedInUser) return Promise.reject('No logged-in user')
+
+    return getById(loggedInUser._id)
+        .then(user => {
+            const updatedUser = { ...user, ...userToUpdate, updatedAt: Date.now() }
+            return storageService.put(STORAGE_KEY, updatedUser)
+        })
+        .then(_setLoggedinUser)
+}
+
+function addActivity(txt) {
+    const loggedInUser = getLoggedinUser()
+    if (!loggedInUser) return Promise.reject('No logged-in user')
+
+    return getById(loggedInUser._id)
+        .then(user => {
+            const updatedUser = { ...user, activities: [...(user.activities || []), txt], updatedAt: Date.now() }
+            return storageService.put(STORAGE_KEY, updatedUser)
+        })
+        .then(_setLoggedinUser)
+}
+
+function updateBalance(amount) {
+    const loggedInUser = getLoggedinUser()
+    if (!loggedInUser) return Promise.reject('No logged-in user')
+
+    return getById(loggedInUser._id)
+        .then(user => {
+            const newBalance = (user.balance || 0) + amount
+            const updatedUser = { ...user, balance: newBalance, updatedAt: Date.now() }
+            return storageService.put(STORAGE_KEY, updatedUser).then(() => newBalance)
+        })
+}
+
 function _setLoggedinUser(user) {
-    const userToSave = { _id: user._id, fullname: user.fullname }
+    const userToSave = {
+        _id: user._id,
+        fullname: user.fullname,
+        balance: user.balance,
+        activities: user.activities || [],
+        pref: user.pref || { color: '#ffffff', bgColor: '#191919' }
+    }
     sessionStorage.setItem(STORAGE_KEY_LOGGEDIN, JSON.stringify(userToSave))
     return userToSave
 }
@@ -76,20 +132,7 @@ function _setLoggedinUser(user) {
 function getEmptyCredentials() {
     return {
         fullname: '',
-        username: 'muki',
-        password: 'muki1',
+        username: '',
+        password: '',
     }
 }
-
-// signup({username: 'muki', password: 'muki1', fullname: 'Muki Ja'})
-// login({username: 'muki', password: 'muki1'})
-
-// Data Model:
-// const user = {
-//     _id: "KAtTl",
-//     username: "muki",
-//     password: "muki1",
-//     fullname: "Muki Ja",
-//     createdAt: 1711490430252,
-//     updatedAt: 1711490430999
-// }
