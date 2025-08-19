@@ -1,4 +1,4 @@
-import { createStore } from 'redux'
+const { createStore, compose } = Redux
 
 export const SET_TODOS = 'SET_TODOS'          
 export const ADD_TODO = 'ADD_TODO'            
@@ -42,6 +42,5 @@ export function appReducer(state = initialState, action = {}) {
             return state
     }
 }
-
-export const store = createStore(appReducer)
-window.gStore = store 
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
+export const store = createStore(appReducer, composeEnhancers())
